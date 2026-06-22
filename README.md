@@ -93,95 +93,6 @@ src/
 
 ---
 
-## Installation
-
-### Clone Repository
-
-```bash
-git clone <repository-url>
-cd prisma-press-backend
-```
-
-### Install Dependencies
-
-Using pnpm:
-
-```bash
-pnpm install
-```
-
-Using npm:
-
-```bash
-npm install
-```
-
----
-
-## Environment Variables
-
-Create a `.env` file in the project root:
-
-```env
-PORT=5000
-
-DATABASE_URL="postgresql://username:password@localhost:5432/prisma_press"
-
-JWT_ACCESS_SECRET=your_access_secret
-
-JWT_REFRESH_SECRET=your_refresh_secret
-
-NODE_ENV=development
-```
-
----
-
-## Running the Application
-
-### Development Mode
-
-Using pnpm:
-
-```bash
-pnpm dev
-```
-
-Using npm:
-
-```bash
-npm run dev
-```
-
-### Production Build
-
-Using pnpm:
-
-```bash
-pnpm build
-```
-
-Using npm:
-
-```bash
-npm run build
-```
-
-### Start Production Server
-
-Using pnpm:
-
-```bash
-pnpm start
-```
-
-Using npm:
-
-```bash
-npm start
-```
-
----
-
 ## Server Startup Requirements
 
 Before starting the application, the server must:
@@ -190,20 +101,6 @@ Before starting the application, the server must:
 2. Connect to Prisma Database.
 3. Start listening only after a successful database connection.
 4. Disconnect Prisma and terminate the process if startup fails.
-
----
-
-## Root Route
-
-### GET /
-
-Returns:
-
-```json
-{
-    "message": "Hello, World!"
-}
-```
 
 ---
 
@@ -216,20 +113,6 @@ The API accepts:
 - JSON Request Body
 - URL Encoded Request Body
 - Cookies on Every Request
-
----
-
-## Protected Routes
-
-Protected endpoints require a valid access token.
-
-Example:
-
-```http
-Authorization: your_access_token
-```
-
-> Note: The current middleware reads the raw token directly from the Authorization header. Do not prepend "Bearer" unless explicitly required by the implementation.
 
 ---
 
@@ -259,8 +142,6 @@ Permissions:
 - Manage all content
 
 ---
-
-## Main Modules
 
 ### Auth Module
 
@@ -313,24 +194,6 @@ Responsibilities:
 ## Database
 
 Database management is handled through Prisma ORM.
-
-Generate Prisma Client:
-
-```bash
-npx prisma generate
-```
-
-Run Migration:
-
-```bash
-npx prisma migrate dev
-```
-
-Deploy Migration:
-
-```bash
-npx prisma migrate deploy
-```
 
 ---
 
