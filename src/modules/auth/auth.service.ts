@@ -1,6 +1,9 @@
 import { ILoginUser } from './auth.interface';
 import { prisma } from '../../lib/prisma';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import config from '../../config';
+import { jwtUtils } from '../../utils/jwt';
 
 const loginUserIntoDB = async (payload: ILoginUser) => {
     const { email, password } = payload;
@@ -26,7 +29,26 @@ const loginUserIntoDB = async (payload: ILoginUser) => {
         throw new Error('Password not matched!');
     }
 
-    return user;
+    const jwtPayload = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+    };
+
+    const accessToken = jwtUtils.createToken(
+        jwtPayload,
+        config.JWT_ACCESS_SECRET,
+        config.JWT_ACCESS_EXPIRES_IN as SignOptions,
+    );
+
+    const refreshToken = jwtUtils.createToken(
+        jwtPayload,
+        config.JWT_REFRESH_SECRET,
+        config.JWT_REFRESH_EXPIRES_IN as SignOptions,
+    );
+
+    return { user, accessToken, refreshToken };
 };
 
 export const authService = {
