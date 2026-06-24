@@ -67,4 +67,17 @@ const registerUserIntoDB = async (payload: IRegisterUserPayload) => {
     return newUser;
 };
 
-export const userService = { registerUserIntoDB };
+const getMyProfileIntoDB = async (userId: string) => {
+    const userProfile = await prisma.user.findFirstOrThrow({
+        where: { id: userId },
+        omit: {
+            password: true,
+        },
+        include: {
+            profile: true,
+        },
+    });
+    return userProfile;
+};
+
+export const userService = { registerUserIntoDB, getMyProfileIntoDB };

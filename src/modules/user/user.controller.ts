@@ -3,8 +3,10 @@ import { userService } from './user.service';
 import HttpStatus from 'http-status';
 import { catchAsync } from '../../utils/catchAsync';
 import { sendResponse } from '../../utils/sendResponse';
+import jwt from 'jsonwebtoken';
+import config from '../../config';
 
-// method-1 start:>
+// method-1 (by catchAsync) start:>
 const registerUser = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
         const payload = req.body;
@@ -21,7 +23,7 @@ const registerUser = catchAsync(
 );
 // method-1 end:
 
-// method-2 start:>
+// method-2 (general method) start:>
 // const registerUser = async (req: Request, res: Response) => {
 //     try {
 //         const payload = req.body;
@@ -49,4 +51,17 @@ const registerUser = catchAsync(
 // };
 // method-2 end:
 
-export const userController = { registerUser };
+const getMyProfile = catchAsync(
+    async (req: Request, res: Response, next: NextFunction) => {
+        const profile = await userService.getMyProfileIntoDB(req.user?.id as string);
+
+        sendResponse(res, {
+            success: true,
+            statusCode: HttpStatus.OK,
+            message: 'User profile fetched successfully',
+            data: {profile},
+        });
+    },
+);
+
+export const userController = { registerUser, getMyProfile };
