@@ -27,6 +27,10 @@ const getAllPosts = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
         const results = await postService.getAllPostsIntoDB();
 
+        if (results.length === 0) {
+            throw new Error('No post yet!!!');
+        }
+
         sendResponse(res, {
             success: true,
             statusCode: httpStatus.OK,
