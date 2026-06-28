@@ -1,5 +1,8 @@
 import { prisma } from '../../lib/prisma';
-import { ICreateCommentPayload } from './comment.interface';
+import {
+    ICreateCommentPayload,
+    IUpdateCommentPayload,
+} from './comment.interface';
 
 const createCommentIntoDB = async (
     payload: ICreateCommentPayload,
@@ -82,11 +85,92 @@ const getCommentByAuthorIdIntoDB = async (authorId: string) => {
     return comments;
 };
 
-const updateCommentIntoDB = async () => {};
+const updateCommentIntoDB = async (
+    commentId: string,
+    payload: IUpdateCommentPayload,
+    authorId: string,
+    isAdmin: boolean,
+) => {
+    const comment = await prisma.comment.findUniqueOrThrow({
+        where: {
+            id: commentId,
+        },
+    });
 
-const deleteCommentIntoDB = async () => {};
+    if (!isAdmin && comment.authorId !== authorId) {
+        throw new Error('You are not the owner of this post!');
+    }
 
-const moderateCommentIntoDB = async () => {};
+    const updateComment = await prisma.comment.update({
+        where: {
+            id: commentId,
+        },
+
+        data: payload,
+    });
+
+    return updateComment;
+};
+
+const deleteCommentIntoDB = async (
+    commentId: string,
+    authorId: string,
+    isAdmin: boolean,
+) => {
+    const comment = await prisma.comment.findUniqueOrThrow({
+        where: {
+            id: commentId,
+        },
+    });
+
+    if (!isAdmin && comment.authorId !== authorId) {
+        throw new Error('You are not the owner of this post!');
+    }
+
+    await prisma.comment.delete({
+        where: {
+            id: commentId,
+        },
+    });
+};
+
+const moderateCommentIntoDB = async (
+    commentId: string,
+    status: 'APPROVED' | 'REJECT',
+    isAdmin: boolean,
+) => {
+    if (!isAdmin) {
+        throw new Error('Only admin can moderate comments.');
+    }
+
+    const comment = await prisma.comment.findUnique({
+        where: {
+            id: commentId,
+        },
+    });
+
+    if (!comment) {
+        throw new Error('Comment not found.');
+    }
+
+    const result = await prisma.comment.update({
+        where: {
+            id: commentId,
+        },
+        data: {
+            status,
+        },
+        include: {
+            author: {
+                omit: {
+                    password: true,
+                },
+            },
+        },
+    });
+
+    return result;
+};
 
 export const commentService = {
     createCommentIntoDB,

@@ -66,15 +66,84 @@ const getCommentByAuthorId = catchAsync(
 );
 
 const updateComment = catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {},
+    async (req: Request, res: Response, next: NextFunction) => {
+        const authorId = req.user?.id;
+        const isAdmin = req.user?.role === 'ADMIN';
+        const payload = req.body;
+        const commentId = req.params.commentId;
+
+        if (!commentId) {
+            throw new Error('Comment Id Required In Params');
+        }
+
+        const result = await commentService.updateCommentIntoDB(
+            commentId as string,
+            payload,
+            authorId as string,
+            isAdmin,
+        );
+
+        sendResponse(res, {
+            success: true,
+            statusCode: httpStatus.OK,
+            message: 'Comment updated successfully',
+            data: result,
+        });
+    },
 );
 
 const deleteComment = catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {},
+    async (req: Request, res: Response, next: NextFunction) => {
+        const authorId = req.user?.id;
+        const isAdmin = req.user?.role === 'ADMIN';
+
+        const { commentId } = req.params;
+        if (!commentId) {
+            throw new Error('Comment Id Required In Params');
+        }
+
+        const result = await commentService.deleteCommentIntoDB(
+            commentId as string,
+            authorId as string,
+            isAdmin,
+        );
+
+        sendResponse(res, {
+            success: true,
+            statusCode: httpStatus.OK,
+            message: 'Comment deleted successfully',
+            data: result,
+        });
+    },
 );
 
 const moderateComment = catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {},
+    async (req: Request, res: Response, next: NextFunction) => {
+        const isAdmin = req.user?.role === 'ADMIN';
+        const { commentId } = req.params;
+        const { status } = req.body;
+
+        if (!commentId) {
+            throw new Error('Comment Id Required In Params');
+        }
+
+        if (!['APPROVED', 'REJECT'].includes(status)) {
+            throw new Error('Status must be APPROVED or REJECT.');
+        }
+
+        const result = await commentService.moderateCommentIntoDB(
+            commentId as string,
+            status,
+            isAdmin,
+        );
+
+        sendResponse(res, {
+            success: true,
+            statusCode: httpStatus.OK,
+            message: 'Comment moderated successfully',
+            data: result,
+        });
+    },
 );
 
 export const commentController = {
