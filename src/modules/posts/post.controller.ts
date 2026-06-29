@@ -25,7 +25,9 @@ const createPost = catchAsync(
 
 const getAllPosts = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
-        const results = await postService.getAllPostsIntoDB();
+        const query = req.query;
+
+        const results = await postService.getAllPostsIntoDB(query);
 
         if (results.length === 0) {
             throw new Error('No post yet!!!');
