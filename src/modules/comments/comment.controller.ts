@@ -23,16 +23,16 @@ const createComment = catchAsync(
     },
 );
 
-const getCommentByCommentId = catchAsync(
+const getCommentByPostId = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
-        const { commentId } = req.params;
+        const { postId } = req.params;
 
-        if (!commentId) {
+        if (!postId) {
             throw new Error('Comment Id Required In Params');
         }
 
-        const result = await commentService.getCommentByCommentIdIntoDB(
-            commentId as string,
+        const result = await commentService.getCommentByPostIdIntoDB(
+            postId as string,
         );
 
         sendResponse(res, {
@@ -148,7 +148,7 @@ const moderateComment = catchAsync(
 
 export const commentController = {
     createComment,
-    getCommentByCommentId,
+    getCommentByPostId,
     getCommentByAuthorId,
     updateComment,
     deleteComment,

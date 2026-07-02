@@ -45,10 +45,10 @@ const createCommentIntoDB = async (
     return result;
 };
 
-const getCommentByCommentIdIntoDB = async (commentId: string) => {
-    const results = await prisma.comment.findUnique({
+const getCommentByPostIdIntoDB = async (postId: string) => {
+    const results = await prisma.comment.findMany({
         where: {
-            id: commentId,
+            postId,
         },
     });
 
@@ -174,7 +174,7 @@ const moderateCommentIntoDB = async (
 
 export const commentService = {
     createCommentIntoDB,
-    getCommentByCommentIdIntoDB,
+    getCommentByPostIdIntoDB,
     getCommentByAuthorIdIntoDB,
     updateCommentIntoDB,
     deleteCommentIntoDB,

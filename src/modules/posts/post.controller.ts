@@ -29,7 +29,7 @@ const getAllPosts = catchAsync(
 
         const results = await postService.getAllPostsIntoDB(query);
 
-        if (results.length === 0) {
+        if (results.data.length === 0) {
             throw new Error('No post yet!!!');
         }
 
@@ -37,7 +37,8 @@ const getAllPosts = catchAsync(
             success: true,
             statusCode: httpStatus.OK,
             message: 'All Posts Retrieved Successfully',
-            data: results,
+            data: results.data,
+            meta: results.meta,
         });
     },
 );
