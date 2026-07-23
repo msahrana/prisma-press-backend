@@ -1,3 +1,4 @@
+import Stripe from 'stripe';
 import config from '../../config';
 import { prisma } from '../../lib/prisma';
 import { stripe } from '../../lib/stripe';
@@ -15,6 +16,9 @@ const createCheckoutSessionIntoDB = async (userId: string) => {
             },
             include: {
                 subscription: true,
+            },
+            omit: {
+                password: true,
             },
         });
 
@@ -67,6 +71,7 @@ const handleWebhookIntoDB = async (payload: Buffer, signature: string) => {
     // Handle the event
     switch (event.type) {
         case 'checkout.session.completed':
+            console.log(event.data.object);
             //Occurs when a Checkout Session has been successfully completed.
             await handleCheckoutCompleted(event.data.object);
 
@@ -78,7 +83,7 @@ const handleWebhookIntoDB = async (payload: Buffer, signature: string) => {
             break;
 
         /*
-            To test this run this command in terminal 
+            To test this run this command in terminal
             stripe subscriptions cancel sub_1PsYourSubIdHere (paste existing subscribed sub id)
             */
 
@@ -89,7 +94,7 @@ const handleWebhookIntoDB = async (payload: Buffer, signature: string) => {
             break;
 
         /*
-       To test this run this command in terminal 
+       To test this run this command in terminal
        stripe subscriptions cancel sub_1PsYourSubIdHere (paste existinmg subscribed sub id)
        */
         default:
@@ -100,6 +105,8 @@ const handleWebhookIntoDB = async (payload: Buffer, signature: string) => {
             break;
     }
 };
+
+
 
 const getSubscriptionStatusIntoDB = async (userId: string) => {
     const isSubscriptionExist = await prisma.subscription.findUniqueOrThrow({

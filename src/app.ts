@@ -1,5 +1,8 @@
+import { subscriptionRouter } from './modules/subscription/subscription.route';
+import { globalErrorHandler } from './middleware/globalErrorHandler';
 import express, { Application, Request, Response } from 'express';
 import { commentRouter } from './modules/comments/comment.route';
+import { premiumRouter } from './modules/premium/premium.route';
 import { userRouter } from './modules/user/user.route';
 import { authRouter } from './modules/auth/auth.route';
 import { postRouter } from './modules/posts/post.route';
@@ -7,10 +10,6 @@ import { notFound } from './middleware/notFound';
 import cookieParser from 'cookie-parser';
 import config from './config';
 import cors from 'cors';
-import { globalErrorHandler } from './middleware/globalErrorHandler';
-import { subscriptionRouter } from './modules/subscription/subscription.route';
-import { stripe } from './lib/stripe';
-import { premiumRouter } from './modules/premium/premium.route';
 
 const app: Application = express();
 
@@ -20,6 +19,8 @@ app.use(
         credentials: true,
     }),
 );
+
+const endpointSecret = config.STRIPE_WEBHOOK_SECRET;
 
 app.use('/api/subscription/webhook', express.raw({ type: 'application/json' }));
 

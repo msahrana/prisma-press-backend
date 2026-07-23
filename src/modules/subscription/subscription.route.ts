@@ -11,7 +11,7 @@ router.post(
     subscriptionController.createCheckoutSession,
 );
 
-router.post('webhook', subscriptionController.handleWebhook);
+router.post('/webhook', subscriptionController.handleWebhook);
 
 router.get(
     '/status',
