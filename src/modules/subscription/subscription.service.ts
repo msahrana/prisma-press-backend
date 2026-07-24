@@ -71,7 +71,6 @@ const handleWebhookIntoDB = async (payload: Buffer, signature: string) => {
     // Handle the event
     switch (event.type) {
         case 'checkout.session.completed':
-            console.log(event.data.object);
             //Occurs when a Checkout Session has been successfully completed.
             await handleCheckoutCompleted(event.data.object);
 
@@ -105,8 +104,6 @@ const handleWebhookIntoDB = async (payload: Buffer, signature: string) => {
             break;
     }
 };
-
-
 
 const getSubscriptionStatusIntoDB = async (userId: string) => {
     const isSubscriptionExist = await prisma.subscription.findUniqueOrThrow({
