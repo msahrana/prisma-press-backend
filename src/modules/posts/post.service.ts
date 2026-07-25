@@ -6,6 +6,7 @@ import {
     IPostQuery,
     IUpdatePostPayload,
 } from './post.interface';
+import { buildPostFilters } from './utils';
 
 const createPostIntoDB = async (
     payload: ICreatePostPayload,
@@ -36,16 +37,24 @@ const createPostIntoDB = async (
 };
 
 const getAllPostsIntoDB = async (query: IPostQuery) => {
-    const limit = query.limit ? Number(query.limit) : 10;
-    const page = query.page ? Number(query.page) : 1;
+    const limit = Number(query.limit) || 10;
+    const page = Number(query.page) || 1;
+
     const skip = (page - 1) * limit;
-    const sortBy = query.sortBy ? query.sortBy : 'createdAt';
-    const sortOrder = query.sortOrder ? query.sortOrder : 'desc';
-    const tags = query.tags ? JSON.parse(query.tags as string) : null;
-    const tagsArray = Array.isArray(tags) ? tags : [];
+
+    const sortBy = query.sortBy ?? 'createdAt';
+    const sortOrder = query.sortOrder ?? 'desc';
+
+    const tagsArray = query.tags
+        ? query.tags
+              .split(',')
+              .map((tag) => tag.trim())
+              .filter(Boolean)
+        : [];
 
     const andConditions: PostWhereInput[] = [];
 
+    // Search
     if (query.searchTerm) {
         andConditions.push({
             OR: [
@@ -65,255 +74,79 @@ const getAllPostsIntoDB = async (query: IPostQuery) => {
         });
     }
 
+    // Title Filter
     if (query.title) {
         andConditions.push({
             title: query.title,
         });
     }
 
+    // Content Filter
     if (query.content) {
         andConditions.push({
             content: query.content,
         });
     }
 
+    // Author Filter
     if (query.authorId) {
         andConditions.push({
             authorId: query.authorId,
         });
     }
 
-    if (query.isFeatured) {
-        andConditions.push({
-            isFeatured: Boolean(query.isFeatured),
-        });
-    }
-
+    // Status Filter
     if (query.status) {
         andConditions.push({
             status: query.status,
         });
     }
 
-    if (query.tags) {
+    // Featured Filter
+    if (query.isFeatured) {
+        andConditions.push({
+            isFeatured: query.isFeatured === 'true',
+        });
+    }
+
+    // Premium Filter
+    if (query.isPremium) {
+        andConditions.push({
+            isPremium: query.isPremium === 'true',
+        });
+    }
+
+    // Tags Filter
+    if (tagsArray.length > 0) {
         andConditions.push({
             tags: {
-                hasSome: tagsArray, // [hasSome-> any tags(partial); byt equals-> all tags(exact)]
+                hasSome: tagsArray,
             },
         });
     }
 
+    // Only Published Public Posts
     andConditions.push({
         isPremium: false,
     });
 
+    //Where
+    // const where: PostWhereInput = {
+    //     AND: andConditions,
+    // };
+
+    const where = buildPostFilters(query);
+
+    //Prisma Query
     const posts = await prisma.post.findMany({
-        // ** search and filter start:> **
+        where,
 
-        // (1.1) Filtering: (Exact match)
-        // where:{
-        //     title:'Pele', // Only one item
-        // },
-
-        // (1.2) Filtering: (Exact match)
-        // where:{
-        //     title:'Pele',
-        //     content: 'Pele is a great footballer'
-        // },
-
-        // (1.3) Filtering: (Exact match by AND operator)
-        // where: {
-        //     AND: [
-        //         {
-        //             title: 'Pele',
-        //         },
-        //         {
-        //             content: 'Pele is a great footballer',
-        //         },
-        //         {
-        //             tags: {
-        //                 equals: ['database', 'indexing', 'sql'], // all tags
-        //             },
-        //         },
-        //     ],
-        // },
-
-        // (1.4) Filtering: (Exact match by AND operator)[best]
-        // where: {
-        //     AND: [
-        //         {
-        //             title: 'Pele',
-        //         },
-        //         {
-        //             content: 'Pele is a great footballer',
-        //         },
-        //         {
-        //             tags: {
-        //                 has: 'sql', // any tags [kind of partial]
-        //             },
-        //         },
-        //     ],
-        // },
-
-        // (2.1) Search: (Partial match)
-        // where:{
-        //     title: {
-        //         contains: "Pele",
-        //         mode:"insensitive"
-        //     }
-        // },
-
-        // (2.2) Search: (Partial match)[Not ideal for partial match]
-        // where:{
-        //     title: {
-        //         contains: "Pele",
-        //         mode:"insensitive"
-        //     },
-        //     content: {
-        //         contains: "Pele",
-        //         mode:"insensitive"
-        //     }
-        // },
-
-        // (2.3) Search: (Partial match by OR operator)[best]
-        // where: {
-        //     OR: [
-        //         {
-        //             title: {
-        //                 contains: 'Pele',
-        //                 mode: 'insensitive',
-        //             }
-        //         },
-        //         {
-        //             content: {
-        //                 contains: 'Pele',
-        //                 mode: 'insensitive',
-        //             }
-        //         },
-        //     ],
-        // },
-
-        // (2.4) Search: (Partial match by OR operator)[best]
-        // where: {
-        //     OR: [
-        //         {
-        //             title: {
-        //                 contains: 'Ronaldo',
-        //                 mode: 'insensitive',
-        //             }
-        //         },
-        //         {
-        //             content: {
-        //                 contains: 'Ronaldo',
-        //                 mode: 'insensitive',
-        //             }
-        //         },
-        //     ],
-        // },
-
-        // (3) combining search (OR Operator) and filtering (AND operator)
-        // (3.1) filtering & searching combined
-        // where: {
-        //     AND: [
-        //         {
-        //             // searching
-        //             OR: [
-        //                 {
-        //                     title: {
-        //                         contains: 'Pe',
-        //                         mode: 'insensitive',
-        //                     },
-        //                 },
-        //                 {
-        //                     content: {
-        //                         contains: 'Pe',
-        //                         mode: 'insensitive',
-        //                     },
-        //                 },
-        //             ],
-        //         },
-
-        //         // filtering
-        //         {
-        //             title: 'Pele',
-        //         },
-        //         {
-        //             content: 'Pele',
-        //         },
-        //     ],
-        // },
-
-        // ** search and filter end: **
-
-        // ** [Pagination with (limit or take) and (skip or page )] start:> **
-        // take: 1,
-        // take : 2,
-        //  skip : 0   // for first page; {Not assignable :> skip : 0 }
-        // skip : 1, // visiting page 2
-        // skip : 2, // visiting page 3
-        // skip : 3, // visiting page 4
-        //page =4 , limit / take = 1 => skip : [(page-1) * limit] => [formula]
-        //page = 3, limit / take = 10 => skip : (page -1 ) * limit = (3-1) * 10 = 20 [per page 10]
-        // ** [Pagination with (limit or take) and (skip or page )] end: **
-
-        // ** (sorting in ascending or descending order on specific fields) start:> **
-        // orderBy : {
-        //     createdAt : "desc",
-        //     title : "asc",
-        //     content : "desc"
-        //     // fieldName : asc/desc
-        // },
-        // ** (sorting in ascending or descending order on specific fields) end: **
-
-        // ** dynamic searching, filtering start:> [Not ideal] **
-        // where: {
-        //     AND: [
-        //         query.searchTerm
-        //             ? {
-        //                   OR: [
-        //                       {
-        //                           title: {
-        //                               contains: query.searchTerm,
-        //                               mode: 'insensitive',
-        //                           },
-        //                       },
-        //                       {
-        //                           content: {
-        //                               contains: query.searchTerm,
-        //                               mode: 'insensitive',
-        //                           },
-        //                       },
-        //                   ],
-        //               }
-        //             : {},
-
-        //         //title filtering
-        //         query.title ? { title: query.title } : {},
-
-        //         //content filtering
-        //         query.content ? { content: query.content } : {},
-        //         {
-        //             tags: {
-        //                 hasSome:[ ""] // [one or many tags]
-        //             }
-        //         }
-        //     ],
-        // },
-        // ** dynamic searching, filtering end: **
-
-        // ** dynamic searching, filtering by andConditions start : [best] **
-        where: {
-            AND: andConditions,
-        },
-        // ** dynamic searching, filtering by andConditions end: **
-
-        // ** dynamic pagination and sorting start:> **
         take: limit,
-        skip: skip,
+        skip,
+
         orderBy: {
-            [sortBy]: sortOrder, // left e [sortBy ]: right e sortOrder
+            [sortBy]: sortOrder,
         },
-        // **dynamic pagination and sorting end: **
 
         include: {
             author: {
@@ -325,17 +158,19 @@ const getAllPostsIntoDB = async (query: IPostQuery) => {
         },
     });
 
+    //Count
     const totalPostCount = await prisma.post.count({
         where: {
             AND: andConditions,
         },
     });
 
+    //Return
     return {
         data: posts,
         meta: {
-            page: page,
-            limit: limit,
+            page,
+            limit,
             total: totalPostCount,
             totalPages: Math.ceil(totalPostCount / limit),
         },
